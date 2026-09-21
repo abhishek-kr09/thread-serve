@@ -4,7 +4,7 @@ ThreadServe is a C++20 multithreaded HTTP server built from the ground up. The p
 
 ## Current Status
 
-Phase 1 is complete: the repository has a CMake foundation, C++20 compiler settings, warning flags, a basic executable, and this README scaffold.
+Phase 2 is complete: the server creates a TCP socket, binds to port 8080, listens, accepts connections, and owns socket cleanup through RAII. Accepted connections are currently closed immediately; HTTP handling comes next.
 
 ## Requirements
 
@@ -53,7 +53,33 @@ cmake --build build --config Debug
 .\build\Debug\threadserve.exe
 ```
 
-The current executable only verifies the project foundation and prints a startup message. TCP listening will be added in Phase 2.
+The current executable starts a TCP listener on `0.0.0.0:8080` and waits for connections. HTTP request handling will be added in the next phase.
+
+To stop the server, use `Ctrl+C` in the terminal. A graceful programmatic shutdown API is present and will be connected to signal handling in a later phase.
+
+## Test Phase 2
+
+Build and run the server from an MSYS2 UCRT64 terminal:
+
+```bash
+cmake --preset debug
+cmake --build --preset debug
+./build/debug/threadserve.exe
+```
+
+In a second terminal, test the TCP port:
+
+```powershell
+Test-NetConnection 127.0.0.1 -Port 8080
+```
+
+Or from MSYS2:
+
+```bash
+printf "test" | nc 127.0.0.1 8080
+```
+
+The server should print `Accepted TCP connection`. It will not return an HTTP response yet because HTTP parsing is a later phase.
 
 ## Planned Architecture
 
@@ -82,8 +108,13 @@ Cross-cutting components will provide configuration, timeouts, logging, and grac
 ├── CMakeLists.txt
 ├── CMakePresets.json
 ├── README.md
+├── include/threadserve/
+│   ├── server.hpp
+│   └── tcp_socket.hpp
 ├── src/
-│   └── main.cpp
+│   ├── main.cpp
+│   ├── server.cpp
+│   └── tcp_socket.cpp
 ├── include/threadserve/
 ├── tests/
 ├── benchmarks/
