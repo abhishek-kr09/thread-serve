@@ -1,0 +1,39 @@
+# Build directories and generated CMake files
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+build.ninja
+.ninja_deps
+.ninja_log
+install_manifest.txt
+compile_commands.json
+
+# Compiled artifacts
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+*.exe
+*.out
+
+# IDE and editor files
+.vscode/
+.idea/
+*.user
+*.suo
+*.vcxproj
+*.vcxproj.filters
+
+# Tool and operating-system files
+.cache/
+.clangd/
+.DS_Store
+Thumbs.db
+
+# Local planning scratch file
+ThreadServe FS.txt
