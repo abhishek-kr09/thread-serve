@@ -2,17 +2,6 @@
 
 ThreadServe is a C++20 multithreaded HTTP server built from the ground up. It is designed to demonstrate systems programming fundamentals: TCP networking, HTTP parsing, routing, thread pools, synchronization, timeouts, logging, testing, benchmarking, and Docker deployment.
 
-## Project Progress
-
-<table>
-<tr>
-<td align="center"><a href="#phase-1-project-foundation"><strong>PHASE 1</strong><br>Foundation</a></td>
-<td align="center"><a href="#phase-2-tcp-listener"><strong>PHASE 2</strong><br>TCP Listener</a></td>
-<td align="center"><a href="#phase-3-http-response"><strong>PHASE 3</strong><br>HTTP Response</a></td>
-<td align="center"><a href="#phase-4-http-parser"><strong>PHASE 4</strong><br>HTTP Parser</a></td>
-</tr>
-</table>
-
 **Current milestone:** Phase 2 complete. The server creates a TCP socket, binds to `0.0.0.0:8080`, listens, accepts connections, and releases socket resources safely through RAII.
 
 <details>
