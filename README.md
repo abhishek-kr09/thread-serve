@@ -2,7 +2,7 @@
 
 ThreadServe is a C++20 multithreaded HTTP server built from the ground up. It is designed to demonstrate systems programming fundamentals: TCP networking, HTTP parsing, routing, thread pools, synchronization, timeouts, logging, testing, benchmarking, and Docker deployment.
 
-**Current milestone:** Phase 2 complete. The server creates a TCP socket, binds to `0.0.0.0:8080`, listens, accepts connections, and releases socket resources safely through RAII.
+**Current milestone:** Phase 3 complete. The server creates a TCP socket, accepts connections, serializes an HTTP response, sends it reliably, and releases socket resources safely through RAII.
 
 <details>
 <summary><strong>Phase 1: Project Foundation</strong></summary>
@@ -150,18 +150,97 @@ ThreadServe now has a working TCP lifecycle. It can accept network connections, 
 </details>
 
 <details>
-<summary><strong>Phase 3: HTTP Response</strong> (planned)</summary>
+<summary><strong>Phase 3: HTTP Response</strong></summary>
 
 <a id="phase-3-http-response"></a>
 
-### Planned Work
+### Objective
 
-- Define an `HttpResponse` model.
-- Add status codes and reason phrases.
-- Serialize HTTP headers and body.
-- Add `Content-Length`.
-- Handle partial `send()` operations.
-- Send a first valid `HTTP/1.1 200 OK` response over the accepted socket.
+Return a valid HTTP/1.1 response over the TCP connection accepted in Phase 2.
+
+### Implemented
+
+- Added `HttpResponse` as the response abstraction used by the server.
+- Added common status codes: `200`, `201`, `204`, `400`, `404`, and `500`.
+- Added status reason phrases such as `OK`, `Created`, `Not Found`, and `Internal Server Error`.
+- Added custom response header support through `set_header()`.
+- Added automatic `Content-Length` calculation from the response body.
+- Added `Connection: close` for the current one-request-per-connection lifecycle.
+- Added HTTP/1.1 serialization with the required `\r\n` line endings.
+- Added `TcpSocket::send_all()` so responses are sent even when TCP performs partial writes.
+- Connected response creation, serialization, and sending to the Phase 2 accept loop.
+- Added the default response body: `ThreadServe is running`.
+
+### Key Files
+
+```text
+include/threadserve/http_response.hpp   Status, headers, and response interface
+src/http_response.cpp                   Status phrases and HTTP serialization
+include/threadserve/tcp_socket.hpp      send_all() socket API
+src/tcp_socket.cpp                      Reliable platform-specific sending
+src/server.cpp                          Response creation after accept()
+```
+
+### Response Flow
+
+```text
+accept() client
+    -> Create HttpResponse(200, body)
+    -> Add Content-Type header
+    -> Add Content-Length and Connection headers
+    -> Serialize HTTP/1.1 message
+    -> send_all() over TCP
+    -> Close client socket through RAII
+```
+
+### Validation
+
+```bash
+cmake --preset debug
+cmake --build --preset debug
+./build/debug/threadserve.exe
+```
+
+From a second terminal:
+
+```bash
+curl -i http://127.0.0.1:8080/
+```
+
+Expected response:
+
+```text
+HTTP/1.1 200 OK
+Connection: close
+Content-Length: 23
+Content-Type: text/plain; charset=utf-8
+
+ThreadServe is running
+```
+
+The same result can be checked with verbose output:
+
+```bash
+curl -v http://127.0.0.1:8080/
+```
+
+The server terminal should also show:
+
+```text
+Accepted TCP connection
+```
+
+### Outcome
+
+Phase 3 is complete. ThreadServe now returns a valid HTTP/1.1 response over a real TCP connection, including a status line, headers, body, correct content length, and connection behavior. The response is currently fixed because request parsing and routing belong to later phases.
+
+### Intentionally Deferred
+
+- Reading the client's HTTP request.
+- Parsing methods, paths, headers, and bodies.
+- Returning different responses based on the request.
+- Keep-alive connections.
+- Chunked transfer encoding.
 
 </details>
 
@@ -248,7 +327,7 @@ TCP listener -> accept loop -> bounded work queue
 
 1. Project foundation - complete
 2. TCP socket layer - complete
-3. Basic HTTP response - planned
+3. Basic HTTP response - complete
 4. HTTP request parser - planned
 5. Blocking queue and thread pool
 6. Router

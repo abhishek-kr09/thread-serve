@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 namespace threadserve {
 
@@ -30,6 +31,7 @@ public:
     void bind(std::uint16_t port);
     void listen(int backlog);
     TcpSocket accept();
+    void send_all(const std::string& data);
     void close() noexcept;
 
     [[nodiscard]] bool valid() const noexcept;

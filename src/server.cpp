@@ -1,5 +1,7 @@
 #include "threadserve/server.hpp"
 
+#include "threadserve/http_response.hpp"
+
 #include <iostream>
 #include <stdexcept>
 
@@ -30,6 +32,10 @@ void TcpServer::run() {
         try {
             TcpSocket client = listener_.accept();
             std::cout << "Accepted TCP connection\n";
+
+            HttpResponse response(HttpStatus::ok, "ThreadServe is running\n");
+            response.set_header("Content-Type", "text/plain; charset=utf-8");
+            client.send_all(response.serialize());
         } catch (const std::runtime_error& error) {
             if (running()) {
                 throw;

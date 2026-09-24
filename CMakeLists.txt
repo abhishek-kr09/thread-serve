@@ -10,6 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(threadserve
     src/main.cpp
+    src/http_response.cpp
     src/server.cpp
     src/tcp_socket.cpp
 )
