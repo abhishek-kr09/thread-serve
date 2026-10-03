@@ -10,8 +10,11 @@ enum class HttpStatus : int {
     created = 201,
     no_content = 204,
     bad_request = 400,
+    request_timeout = 408,
+    payload_too_large = 413,
     not_found = 404,
     internal_server_error = 500,
+    http_version_not_supported = 505,
 };
 
 class HttpResponse {

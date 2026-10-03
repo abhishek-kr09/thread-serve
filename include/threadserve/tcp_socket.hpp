@@ -31,6 +31,7 @@ public:
     void bind(std::uint16_t port);
     void listen(int backlog);
     TcpSocket accept();
+    [[nodiscard]] std::size_t receive_some(char* buffer, std::size_t capacity);
     void send_all(const std::string& data);
     void close() noexcept;
 

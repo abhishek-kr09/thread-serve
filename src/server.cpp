@@ -1,6 +1,7 @@
 #include "threadserve/server.hpp"
 
 #include "threadserve/http_response.hpp"
+#include "threadserve/http_parser.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -34,6 +35,13 @@ void TcpServer::run() {
             std::cout << "Accepted TCP connection\n";
 
             HttpResponse response(HttpStatus::ok, "ThreadServe is running\n");
+            try {
+                const HttpRequest request = read_http_request(client);
+                std::cout << "Parsed " << request.method << ' ' << request.path << '\n';
+            } catch (const HttpParseError& error) {
+                const auto status = static_cast<HttpStatus>(error.status_code());
+                response = HttpResponse(status, error.what());
+            }
             response.set_header("Content-Type", "text/plain; charset=utf-8");
             client.send_all(response.serialize());
         } catch (const std::runtime_error& error) {

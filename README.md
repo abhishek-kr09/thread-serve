@@ -2,7 +2,7 @@
 
 ThreadServe is a C++20 multithreaded HTTP server built from the ground up. It is designed to demonstrate systems programming fundamentals: TCP networking, HTTP parsing, routing, thread pools, synchronization, timeouts, logging, testing, benchmarking, and Docker deployment.
 
-**Current milestone:** Phase 3 complete. The server creates a TCP socket, accepts connections, serializes an HTTP response, sends it reliably, and releases socket resources safely through RAII.
+**Current milestone:** Phase 4 complete. The server reads and validates HTTP request lines, headers, and bounded request bodies before sending a response.
 
 <details>
 <summary><strong>Phase 1: Project Foundation</strong></summary>
@@ -245,17 +245,102 @@ Phase 3 is complete. ThreadServe now returns a valid HTTP/1.1 response over a re
 </details>
 
 <details>
-<summary><strong>Phase 4: HTTP Parser</strong> (planned)</summary>
+<summary><strong>Phase 4: HTTP Parser</strong></summary>
 
 <a id="phase-4-http-parser"></a>
 
-### Planned Work
+### Objective
 
-- Parse the HTTP request line.
-- Parse methods, paths, query strings, and headers.
-- Read request bodies using `Content-Length`.
-- Reject malformed and oversized requests.
-- Add focused parser tests.
+Read an HTTP/1.1 request from the accepted TCP connection and convert it into a validated `HttpRequest`.
+
+### Implemented
+
+- Added `HttpRequest` with method, target, path, query, version, headers, and body fields.
+- Added request-line parsing for method, target, and HTTP version.
+- Added query-string separation from the request path.
+- Added case-insensitive header names and trimmed header values.
+- Added `Content-Length` parsing and body reads across multiple TCP receives.
+- Added configurable limits for header bytes, body bytes, and header count.
+- Added parser errors for malformed input, unsupported HTTP versions, oversized bodies, and incomplete messages.
+- Added `TcpSocket::receive_some()` as the parser's bounded byte-reading primitive.
+- Connected parser errors to HTTP `400`, `413`, and `505` responses.
+
+### Key Files
+
+```text
+include/threadserve/http_request.hpp   Parsed request data model
+include/threadserve/http_parser.hpp    Parser API, limits, and parse errors
+src/http_parser.cpp                    Request-line, header, and body parsing
+include/threadserve/tcp_socket.hpp      receive_some() socket API
+src/tcp_socket.cpp                     Platform-specific TCP reads
+src/server.cpp                          Parser and error-response integration
+```
+
+### Request Flow
+
+```text
+accept() client
+    -> Read until CRLF CRLF
+    -> Parse request line
+    -> Parse and normalize headers
+    -> Validate Content-Length
+    -> Read bounded request body
+    -> Build HttpRequest
+    -> Send response
+```
+
+### Error Behavior
+
+| Invalid input | Response |
+| --- | --- |
+| Malformed request line or header | `400 Bad Request` |
+| Unsupported HTTP version | `505 HTTP Version Not Supported` |
+| Body larger than configured limit | `413 Payload Too Large` |
+| Connection closes before request completes | `400 Bad Request` |
+
+### Validation
+
+Build and start the server:
+
+```bash
+cmake --preset debug
+cmake --build --preset debug
+./build/debug/threadserve.exe
+```
+
+Verified build output:
+
+```text
+[6/6] Linking CXX executable threadserve.exe
+ThreadServe listening on 0.0.0.0:8080
+```
+
+Send a valid request:
+
+```bash
+curl -i http://127.0.0.1:8080/health
+```
+
+Send a request with a body:
+
+```bash
+curl -i -X POST http://127.0.0.1:8080/echo -d "hello"
+```
+
+Verified server log output:
+
+```text
+Accepted TCP connection
+Parsed GET /health
+Accepted TCP connection
+Parsed POST /echo
+```
+
+The server successfully parses both requests and sends an HTTP response. It currently returns the same fixed response for every valid request because request routing belongs to Phase 6.
+
+### Phase 4 Outcome
+
+Phase 4 is complete. ThreadServe can now read an HTTP request from TCP, validate its structure and size, extract the method, path, query string, headers, and body, and return protocol-specific errors for invalid input. Request timeouts and concurrent parsing are intentionally deferred to later phases.
 
 </details>
 
@@ -328,7 +413,7 @@ TCP listener -> accept loop -> bounded work queue
 1. Project foundation - complete
 2. TCP socket layer - complete
 3. Basic HTTP response - complete
-4. HTTP request parser - planned
+4. HTTP request parser - complete
 5. Blocking queue and thread pool
 6. Router
 7. Request limits and timeouts

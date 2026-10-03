@@ -16,10 +16,16 @@ namespace {
             return "No Content";
         case HttpStatus::bad_request:
             return "Bad Request";
+        case HttpStatus::request_timeout:
+            return "Request Timeout";
+        case HttpStatus::payload_too_large:
+            return "Payload Too Large";
         case HttpStatus::not_found:
             return "Not Found";
         case HttpStatus::internal_server_error:
             return "Internal Server Error";
+        case HttpStatus::http_version_not_supported:
+            return "HTTP Version Not Supported";
     }
     return "Unknown Status";
 }

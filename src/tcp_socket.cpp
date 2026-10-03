@@ -141,6 +141,18 @@ void TcpSocket::listen(int backlog) {
     }
 }
 
+std::size_t TcpSocket::receive_some(char* buffer, std::size_t capacity) {
+#ifdef _WIN32
+    const int result = ::recv(static_cast<SOCKET>(handle_), buffer, static_cast<int>(capacity), 0);
+#else
+    const auto result = ::recv(handle_, buffer, capacity, 0);
+#endif
+    if (result < 0) {
+        throw std::runtime_error(socket_error_message("recv"));
+    }
+    return static_cast<std::size_t>(result);
+}
+
 void TcpSocket::send_all(const std::string& data) {
     std::size_t bytes_sent = 0;
     while (bytes_sent < data.size()) {
